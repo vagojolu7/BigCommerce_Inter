@@ -47,12 +47,86 @@ category:
             </aside>
         {{/if}}
     {{/if}}
-
+    <div id='message' style="display: none;">
+        <span>Item Added to cart</span>
+        <a href="#" class="close-notify">X</a>
+    </div>    
+    <button onclick="createMe();" style="padding: 10px 32px; text-align: center; border: 1px solid #008CBA; border-radius: 4px; margin-left: 1%; background-color: #fff; ">Add All to Cart</button>
+    <button onclick="deleteMe()" id = "hideMe" style="display: none; padding: 10px 32px; text-align: center; border: 1px solid #008CBA; border-radius: 4px; margin-left: 1%; margin-right: 1%; background-color: #fff; ">Remove all Items</button>
     <main class="page-content" id="product-listing-container">
         {{> components/category/product-listing}}
         {{{region name="category_below_content"}}}
     </main>
 </div>
+
+<script defer="defer">
+    function toggleMe(){
+        var hideB = document.getElementById("hideMe");
+        var displaySetting = hideB.style.display;
+        if(displaySetting == 'block'){
+            hideB.style.display = 'none';    
+        }else{
+            hideB.style.display = 'block';
+        }
+    }
+    function createCart(url, items) {
+        return fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization":"kuyhctqplhsjrv89mzcv32m4v8gxhwj"},
+            body: JSON.stringify(items),
+        })
+        .then(response => response.json());
+    };
+
+    function createMe(){
+        createCart('/api/storefront/carts', {
+                "lineItems": [
+                    {
+                        "quantity": 1,
+                        "productId": 112
+                    }
+                ]
+            })
+        .then(data => console.log(JSON.stringify(data)))
+        .catch(error => console.error(error));
+        toggleMe();
+        alert("Item added to cart");
+    
+    };
+
+    function deleteCart(url, cartID){
+        return fetch(url + cartID, {
+            method: "DELETE",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",}
+        })
+        .then(response => response.json());  
+    };
+
+    function deleteMe(){
+        respp = getCart('/api/storefront/carts?include=lineItems.digitalItems.options,lineItems.physicalItems.options').then(gg => {const names = gg.map(gg => gg.id).join("\n"); 
+            console.log(names);
+            deleteCart('/api/storefront/carts/', names);
+        });
+        toggleMe();
+        //resp = JSON.parse(respp);
+        //deleteCart('/api/storefront/carts/', respp.id).then(data => console.log(JSON.stringify(data)));
+        alert("Item removed");
+    };
+
+    function getCart(url) {
+        return fetch(url, {
+            method: "GET",
+            credentials: "same-origin"
+        })
+        .then(response => response.json());
+    };
+</script>
 
 {{/partial}}
 {{> layout/base}}
